@@ -3,6 +3,7 @@ package com.github.lucasnpires.ifood.resource;
 import java.util.List;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -19,13 +20,18 @@ import javax.ws.rs.core.Response.Status;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
+import com.github.lucasnpires.ifood.dto.RestauranteDTO;
 import com.github.lucasnpires.ifood.entity.Prato;
 import com.github.lucasnpires.ifood.entity.Restaurante;
+import com.github.lucasnpires.ifood.mapper.RestauranteMapper;
 
 @Path("/restaurantes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class RestauranteResource {
+	
+	@Inject
+	private RestauranteMapper restauranteMapper;
 	
 	@GET
 	@Tag(name = "restaurante")
@@ -36,8 +42,9 @@ public class RestauranteResource {
 	@POST
 	@Tag(name = "restaurante")
 	@Transactional
-	public Response create(Restaurante dto) {
-		dto.persist();
+	public Response create(RestauranteDTO dto) {
+		Restaurante restaurante = restauranteMapper.toRestaurante(dto);
+		restaurante.persist();
 		return Response.status(Status.CREATED).build();
 	}
 
@@ -45,7 +52,7 @@ public class RestauranteResource {
 	@Path("{id}")
 	@Transactional
 	@Tag(name = "restaurante")
-	public void update(@PathParam("id") Long id, Restaurante dto) {
+	public void update(@PathParam("id") Long id, RestauranteDTO dto) {
 		Optional<Restaurante> restauranteOp = Restaurante.findByIdOptional(id);
 		if (restauranteOp.isEmpty()) {
 			throw new NotFoundException();
