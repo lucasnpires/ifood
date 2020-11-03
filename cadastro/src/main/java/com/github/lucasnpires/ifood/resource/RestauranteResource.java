@@ -20,9 +20,11 @@ import javax.ws.rs.core.Response.Status;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
+import com.github.lucasnpires.ifood.dto.PratoDTO;
 import com.github.lucasnpires.ifood.dto.RestauranteDTO;
 import com.github.lucasnpires.ifood.entity.Prato;
 import com.github.lucasnpires.ifood.entity.Restaurante;
+import com.github.lucasnpires.ifood.mapper.PratoMapper;
 import com.github.lucasnpires.ifood.mapper.RestauranteMapper;
 
 @Path("/restaurantes")
@@ -32,6 +34,9 @@ public class RestauranteResource {
 	
 	@Inject
 	private RestauranteMapper restauranteMapper;
+	
+	@Inject
+	private PratoMapper pratoMapper;
 	
 	@GET
 	@Tag(name = "restaurante")
@@ -60,6 +65,7 @@ public class RestauranteResource {
 
 		Restaurante restaurante = restauranteOp.get();
 		restaurante.setNome(dto.getNome());
+		restaurante.setCnpj(dto.getCnpj());
 		restaurante.persist();
 	}
 
@@ -91,16 +97,15 @@ public class RestauranteResource {
 	@Path("{idRestaurante}/pratos")
 	@Transactional
 	@Tag(name = "prato")
-	public Response createPrato(@PathParam("idRestaurante") Long idRestaurante, Prato dto) {
+	public Response createPrato(@PathParam("idRestaurante") Long idRestaurante, PratoDTO dto) {
+		
 		Optional<Restaurante> restauranteOp = Restaurante.findByIdOptional(idRestaurante);
 		
 		if(restauranteOp.isEmpty()) {
 			throw new NotFoundException("Restaurante não existe");
 		}
-		Prato prato = new Prato();
-		prato.setNome(dto.getNome());
-		prato.setDescricao(dto.getDescricao());
-		prato.setPreco(dto.getPreco());
+		
+		Prato prato = pratoMapper.toPrato(dto);
 		prato.setRestaurante(restauranteOp.get());
 		prato.persist();
 		
@@ -111,7 +116,7 @@ public class RestauranteResource {
 	@Path("{idRestaurante}/pratos/{id}")
 	@Transactional
 	@Tag(name = "prato")
-	public void updatePrato(@PathParam("idRestaurante") Long idRestaurante,@PathParam("id") Long id, Prato dto) {
+	public void updatePrato(@PathParam("idRestaurante") Long idRestaurante,@PathParam("id") Long id, PratoDTO dto) {
 		Optional<Restaurante> restauranteOp = Restaurante.findByIdOptional(idRestaurante);
 		
 		if(restauranteOp.isEmpty()) {
@@ -126,6 +131,8 @@ public class RestauranteResource {
 		
 		Prato prato = pratoOp.get();
 		prato.setPreco(dto.getPreco());
+		prato.setDescricao(dto.getDescricao());
+		prato.setNome(dto.getNome());
 		prato.persist();
 		
 	}
